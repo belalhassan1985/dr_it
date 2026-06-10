@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { prisma } from "@/lib/db";
 import type { UserRole } from "@prisma/client";
 
@@ -19,10 +19,13 @@ export async function createSession(user: { id: string; role: UserRole }) {
   };
   const token = await signSession(payload);
   const cookieStore = await cookies();
+  const h = await headers();
+  const proto = h.get("x-forwarded-proto") ?? "";
+  const isSecure = proto === "https";
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: isSecure,
     path: "/",
     maxAge: maxAgeSeconds,
   });
