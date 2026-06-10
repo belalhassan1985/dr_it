@@ -1,0 +1,15 @@
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.100.122:3000
+- Environments: .env
+
+✓ Starting...
+✓ Ready in 3.4s
+ GET / 200 in 1502ms (compile: 1025ms, render: 477ms)
+ GET /api/session 200 in 280ms (compile: 260ms, render: 20ms)
+ GET / 200 in 179ms (compile: 3ms, render: 176ms)
+ GET /categories/%D9%84%D8%A7%D8%A8%D8%AA%D9%88%D8%A8%D8%A7%D8%AA-%D9%88%D8%AD%D8%A7%D8%B3%D8%A8%D8%A7%D8%AA 404 in 769ms (compile: 652ms, render: 117ms)
+ GET /categories 200 in 148ms (compile: 76ms, render: 72ms)
+ GET / 200 in 133ms (compile: 2ms, render: 130ms)
+ GET /categories/%D9%84%D8%A7%D8%A8%D8%AA%D9%88%D8%A8%D8%A7%D8%AA-%D9%88%D8%AD%D8%A7%D8%B3%D8%A8%D8%A7%D8%AA 404 in 78ms (compile: 13ms, render: 65ms)
+ GET /categories/%D8%A8%D8%B1%D8%A7%D9%85%D8%AC 404 in 100ms (compile: 15ms, render: 86ms)
