@@ -19,6 +19,7 @@ export function StoreFilters({
       <button type="submit">تطبيق</button>
       <label className="available-filter">
         <input name="available" value="1" type="checkbox" defaultChecked={searchParams.available === "1"} />
+        <span className="toggle-track"><span className="toggle-thumb" /></span>
         المتوفر فقط
       </label>
       <select name="sort" defaultValue={searchParams.sort ?? "latest"} aria-label="ترتيب المنتجات">

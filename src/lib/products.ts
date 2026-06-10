@@ -99,6 +99,7 @@ export async function getStoreProduct(id: string): Promise<StoreProduct | null> 
 
 export async function getStoreCategories() {
   return prisma.category.findMany({
+    where: { isActive: true },
     orderBy: [
       { products: { _count: "desc" } },
       { nameAr: "asc" },
@@ -116,6 +117,7 @@ export async function getStoreCategories() {
 
 export async function getStoreBrands() {
   return prisma.brand.findMany({
+    where: { isActive: true },
     orderBy: [
       { products: { _count: "desc" } },
       { name: "asc" },

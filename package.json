@@ -13,6 +13,7 @@
     "import:anas": "tsx scripts/import-anas.ts",
     "sync:anas": "tsx scripts/import-anas.ts",
     "seed:admin": "tsx scripts/seed-admin.ts",
+    "seed:store": "tsx scripts/seed-store.ts",
     "db:backup": "tsx scripts/db-backup.ts",
     "healthcheck": "tsx scripts/healthcheck.ts",
     "prelaunch": "npx prisma validate && npm run lint && npm run build"
