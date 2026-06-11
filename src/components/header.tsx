@@ -1,16 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Flame, Search, ShoppingCart } from "lucide-react";
+import { Flame, Home, LayoutGrid, Percent, Search, ShoppingCart, Sparkles, Tag } from "lucide-react";
 import { CartPanel } from "@/components/cart-panel";
 import { useCart } from "@/components/cart-context";
 
 const navItems = [
-  { label: "الرئيسية", href: "/" },
-  { label: "آخر المنتجات", href: "/latest" },
-  { label: "العلامات التجارية", href: "/brands" },
-  { label: "الأقسام", href: "/categories" },
-  { label: "الخصومات", href: "/discounts" },
+  { label: "الرئيسية", href: "/", icon: Home },
+  { label: "آخر المنتجات", href: "/latest", icon: Sparkles },
+  { label: "العلامات التجارية", href: "/brands", icon: Tag },
+  { label: "الأقسام", href: "/categories", icon: LayoutGrid },
+  { label: "الخصومات", href: "/discounts", icon: Percent },
 ];
 
 type HeaderProps = {
@@ -40,12 +40,16 @@ export function Header({ active }: HeaderProps) {
           </button>
         </div>
         <nav className="main-nav">
-          {navItems.map((item) => (
-            <Link className={active === item.label ? "active" : ""} href={item.href} key={item.label}>
-              {item.label}
-              {item.label === "الخصومات" ? <Flame size={15} /> : null}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link className={active === item.label ? "active" : ""} href={item.href} key={item.label}>
+                <Icon size={18} />
+                <span>{item.label}</span>
+                {item.label === "الخصومات" ? <Flame size={12} className="discount-flame" /> : null}
+              </Link>
+            );
+          })}
         </nav>
       </header>
       <CartPanel open={cartDrawerOpen} onClose={closeCartDrawer} />

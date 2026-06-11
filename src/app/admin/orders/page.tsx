@@ -5,6 +5,7 @@ import { updateOrderStatus } from "@/lib/admin-actions";
 import { PAGE_SIZE } from "@/lib/admin-utils";
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/money";
+import { getOrderStatusLabel } from "@/lib/order-status";
 
 type OrdersAdminPageProps = {
   searchParams: Promise<{ page?: string; q?: string }>;
@@ -32,13 +33,13 @@ export default async function OrdersAdminPage({ searchParams }: OrdersAdminPageP
         <thead><tr><th>رقم الطلب</th><th>الزبون</th><th>الهاتف</th><th>الحالة</th><th>المجموع</th><th>التفاصيل</th></tr></thead>
         <tbody>{orders.map((order) => (
           <tr key={order.id}>
-            <td>{order.orderNo}</td><td>{order.customerName}</td><td>{order.customerPhone}</td><td>{order.status}</td><td>{formatPrice(order.total)}</td>
+            <td>{order.orderNo}</td><td>{order.customerName}</td><td>{order.customerPhone}</td><td>{getOrderStatusLabel(order.status)}</td><td>{formatPrice(order.total)}</td>
             <td>
               <details>
                 <summary>عرض</summary>
                 <form action={updateOrderStatus} className="admin-inline-form">
                   <input name="id" type="hidden" value={order.id} />
-                  <select name="status" defaultValue={order.status}>{Object.values(OrderStatus).map((status) => <option value={status} key={status}>{status}</option>)}</select>
+                  <select name="status" defaultValue={order.status}>{Object.values(OrderStatus).map((status) => <option value={status} key={status}>{getOrderStatusLabel(status)}</option>)}</select>
                   <button>تغيير الحالة</button>
                 </form>
                 <div className="admin-order-items">{order.items.map((item) => <p key={item.id}>{item.name} × {item.quantity} = {formatPrice(item.total)}</p>)}</div>

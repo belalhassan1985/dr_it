@@ -12,6 +12,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Header } from "@/components/header";
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/money";
+import { getOrderStatusLabel } from "@/lib/order-status";
 
 type OrderConfirmationPageProps = {
   params: Promise<{ id: string }>;
@@ -45,7 +46,7 @@ export default async function OrderConfirmationPage({ params }: OrderConfirmatio
         <section className="order-confirmation">
           <div className="order-summary-head">
             <div><span>رقم الطلب</span><strong>{order.orderNo}</strong></div>
-            <div><span>حالة الطلب</span><strong>{order.status}</strong></div>
+            <div><span>حالة الطلب</span><strong>{getOrderStatusLabel(order.status)}</strong></div>
             <div><span>الزبون</span><strong>{order.customerName}</strong></div>
             <div><span>الهاتف</span><strong>{order.customerPhone}</strong></div>
             {order.customerEmail ? <div><span>البريد</span><strong>{order.customerEmail}</strong></div> : null}

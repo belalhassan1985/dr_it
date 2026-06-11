@@ -127,3 +127,219 @@ export async function runAnasSync() {
     throw new Error(result.error || "Sync failed unexpectedly");
   }
 }
+
+async function saveUploadedFile(file: File, prefix: string): Promise<string> {
+  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  if (!["jpg", "jpeg", "png", "webp"].includes(ext)) throw new Error("Unsupported file extension");
+  if (file.size > 3 * 1024 * 1024) throw new Error("File is too large (max 3MB)");
+  const safeName = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const dir = path.join(process.cwd(), "public", "uploads", "banners");
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, safeName), Buffer.from(await file.arrayBuffer()));
+  return `/uploads/banners/${safeName}`;
+}
+
+function resolveImageField(value: FormDataEntryValue | null, prefix: string): Promise<string | null> {
+  if (!value) return Promise.resolve(null);
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return Promise.resolve(trimmed || null);
+  }
+  if (value instanceof File && value.size > 0) {
+    return saveUploadedFile(value, prefix);
+  }
+  return Promise.resolve(null);
+}
+
+export async function saveBanner(formData: FormData) {
+  try {
+    await assertAdminAccess();
+  } catch {
+    return { success: false, message: "صلاحية الوصول منتهية. الرجاء تسجيل الدخول مرة أخرى." };
+  }
+
+  const id = String(formData.get("id") ?? "");
+
+  const existingImageUrl = String(formData.get("existingImageUrl") ?? "") || null;
+  const existingDesktopImageUrl = String(formData.get("existingDesktopImageUrl") ?? "") || null;
+  const existingMobileImageUrl = String(formData.get("existingMobileImageUrl") ?? "") || null;
+
+  let imageUrl: string | null | undefined;
+  let desktopImageUrl: string | null | undefined;
+  let mobileImageUrl: string | null | undefined;
+
+  try {
+    imageUrl = await resolveImageField(formData.get("imageUrl"), "banner");
+    desktopImageUrl = await resolveImageField(formData.get("desktopImageUrl"), "banner-desktop");
+    mobileImageUrl = await resolveImageField(formData.get("mobileImageUrl"), "banner-mobile");
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("too large")) return { success: false, message: "حجم الصورة كبير جداً. الحد الأقصى 3 ميغابايت." };
+    if (msg.includes("extension") || msg.includes("type")) return { success: false, message: "نوع الملف غير مدعوم. يُقبل JPG و PNG و WebP فقط." };
+    console.error("[saveBanner] upload error:", err);
+    return { success: false, message: "فشل رفع الصورة. تحقق من حجم الملف ونوعه." };
+  }
+
+  if (!imageUrl && existingImageUrl) imageUrl = existingImageUrl;
+  if (!desktopImageUrl && existingDesktopImageUrl) desktopImageUrl = existingDesktopImageUrl;
+  if (!mobileImageUrl && existingMobileImageUrl) mobileImageUrl = existingMobileImageUrl;
+
+  imageUrl = imageUrl || null;
+  desktopImageUrl = desktopImageUrl || null;
+  mobileImageUrl = mobileImageUrl || null;
+
+  if (!imageUrl) return { success: false, message: "يجب اختيار صورة رئيسية للـ Banner." };
+
+  const title = String(formData.get("title") ?? "").trim() || null;
+  const subtitle = String(formData.get("subtitle") ?? "").trim() || null;
+  const linkUrl = String(formData.get("linkUrl") ?? "").trim() || null;
+  const buttonText = String(formData.get("buttonText") ?? "").trim() || null;
+  const sortOrder = parseIntField(formData.get("sortOrder"));
+  const isActive = formData.get("isActive") === "on";
+
+  const data = { title, subtitle, imageUrl, desktopImageUrl, mobileImageUrl, linkUrl, buttonText, sortOrder, isActive };
+
+  try {
+    if (id) {
+      await prisma.banner.update({ where: { id }, data });
+    } else {
+      await prisma.banner.create({ data });
+    }
+  } catch (err) {
+    console.error("[saveBanner] db error:", err);
+    return { success: false, message: "حدث خطأ أثناء حفظ البنر. الرجاء المحاولة مرة أخرى." };
+  }
+
+  revalidatePath("/admin/banners");
+  revalidatePath("/");
+  return { success: true, message: id ? "تم تحديث البنر بنجاح" : "تمت إضافة البنر بنجاح", isEdit: !!id };
+}
+
+export async function deleteBanner(formData: FormData) {
+  try {
+    await assertAdminAccess();
+  } catch {
+    return { success: false, message: "صلاحية الوصول منتهية. الرجاء تسجيل الدخول مرة أخرى." };
+  }
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) {
+    return { success: false, message: "لم يتم تحديد البنر." };
+  }
+
+  try {
+    await prisma.banner.delete({ where: { id } });
+  } catch (err) {
+    console.error("[deleteBanner] db error:", err);
+    return { success: false, message: "حدث خطأ أثناء حذف البنر." };
+  }
+
+  revalidatePath("/admin/banners");
+  revalidatePath("/");
+  return { success: true, message: "تم حذف البنر بنجاح" };
+}
+
+const WHATSAPP_SETTINGS_KEYS = [
+  "whatsapp.enabled",
+  "whatsapp.template",
+  "whatsapp.store_whatsapp",
+];
+
+const WAHA_SETTINGS_KEYS = [
+  "waha.base_url",
+  "waha.session_name",
+  "waha.api_key",
+];
+
+export async function saveWhatsappSettings(formData: FormData) {
+  await assertAdminAccess();
+  for (const key of [...WHATSAPP_SETTINGS_KEYS, ...WAHA_SETTINGS_KEYS]) {
+    const value = String(formData.get(key) ?? "");
+    // Skip empty api_key to preserve existing value
+    if (key === "waha.api_key" && !value) continue;
+    await prisma.setting.upsert({ where: { key }, update: { value }, create: { key, value } });
+  }
+  revalidatePath("/admin/settings");
+}
+
+export async function wahaStartSessionAction() {
+  await assertAdminAccess();
+  const { wahaStartSession } = await import("@/lib/whatsapp-service");
+  const result = await wahaStartSession();
+  revalidatePath("/admin/settings");
+  return result;
+}
+
+export async function wahaGetQRAction() {
+  await assertAdminAccess();
+  const { wahaGetQR } = await import("@/lib/whatsapp-service");
+  return wahaGetQR();
+}
+
+export async function wahaGetStatusAction() {
+  await assertAdminAccess();
+  const { wahaGetStatus } = await import("@/lib/whatsapp-service");
+  const result = await wahaGetStatus();
+  revalidatePath("/admin/settings");
+  return result;
+}
+
+export async function wahaLogoutAction() {
+  await assertAdminAccess();
+  const { wahaLogout } = await import("@/lib/whatsapp-service");
+  const result = await wahaLogout();
+  revalidatePath("/admin/settings");
+  return result;
+}
+
+export async function savePaymentAccount(formData: FormData): Promise<{ success: boolean; message: string }> {
+  await assertAdminAccess();
+  const id = String(formData.get("id") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  const accountNumber = String(formData.get("accountNumber") ?? "").trim();
+  const accountHolder = String(formData.get("accountHolder") ?? "").trim() || null;
+  const notes = String(formData.get("notes") ?? "").trim() || null;
+  const isActive = formData.get("isActive") === "on";
+  const isDefault = formData.get("isDefault") === "on";
+  const sortOrder = parseIntField(formData.get("sortOrder"));
+
+  if (!name || !accountNumber) {
+    return { success: false, message: "اسم الحساب ورقم الحساب مطلوبان" };
+  }
+
+  if (isDefault) {
+    await prisma.paymentAccount.updateMany({ where: { isDefault: true }, data: { isDefault: false } });
+  }
+
+  if (id) {
+    await prisma.paymentAccount.update({ where: { id }, data: { name, accountNumber, accountHolder, notes, isActive, isDefault, sortOrder } });
+  } else {
+    await prisma.paymentAccount.create({ data: { name, accountNumber, accountHolder, notes, isActive, isDefault, sortOrder } });
+  }
+
+  revalidatePath("/admin/settings");
+  return { success: true, message: id ? "تم تحديث الحساب بنجاح" : "تمت إضافة الحساب بنجاح" };
+}
+
+export async function deletePaymentAccount(formData: FormData) {
+  await assertAdminAccess();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  await prisma.paymentAccount.delete({ where: { id } });
+  revalidatePath("/admin/settings");
+}
+
+export async function wahaResetSessionAction() {
+  await assertAdminAccess();
+  const { wahaResetSession } = await import("@/lib/whatsapp-service");
+  const result = await wahaResetSession();
+  revalidatePath("/admin/settings");
+  return result;
+}
+
+export async function sendTestWhatsApp(formData: FormData) {
+  await assertAdminAccess();
+  const phone = String(formData.get("testPhone") ?? "").trim();
+  const { sendTestMessage } = await import("@/lib/whatsapp-service");
+  return sendTestMessage(phone);
+}

@@ -2,6 +2,7 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import { AdminTable } from "@/components/admin/admin-table";
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/money";
+import { getOrderStatusLabel } from "@/lib/order-status";
 
 export default async function AdminPage() {
   const [products, categories, brands, orders, stock, unavailable, latestSync, latestOrders] = await Promise.all([
@@ -34,7 +35,7 @@ export default async function AdminPage() {
             <tr key={order.id}>
               <td>{order.orderNo}</td>
               <td>{order.customerName}</td>
-              <td>{order.status}</td>
+              <td>{getOrderStatusLabel(order.status)}</td>
               <td>{formatPrice(order.total)}</td>
               <td>{order.createdAt.toLocaleDateString("en-GB")}</td>
             </tr>

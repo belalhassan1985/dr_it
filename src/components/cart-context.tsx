@@ -41,19 +41,21 @@ const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "dr-it-cart";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<StoredCartItem[]>(() => {
-    if (typeof window === "undefined") return [];
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (!stored) return [];
-    try {
-      return JSON.parse(stored) as StoredCartItem[];
-    } catch {
-      return [];
-    }
-  });
+  const [items, setItems] = useState<StoredCartItem[]>([]);
   const [products, setProducts] = useState<CartProduct[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        setItems(JSON.parse(stored) as StoredCartItem[]); // eslint-disable-line react-hooks/set-state-in-effect
+      } catch {
+        /* ignore */
+      }
+    }
+  }, []);
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));

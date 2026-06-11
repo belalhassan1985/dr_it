@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { Header } from "@/components/header";
+import { HeroSlider } from "@/components/hero-slider";
 import { CategorySidebar } from "@/components/category-sidebar";
 import { ProductCard } from "@/components/product-card";
 import { getLatestStoreProducts, getStoreCategories } from "@/lib/products";
 import { getSettings } from "@/lib/settings";
+import { getActiveBanners } from "@/lib/banners";
 
 export const metadata: Metadata = {
   title: {
@@ -27,6 +28,7 @@ export default async function Home() {
   ]);
 
   const settings = await getSettings(["site.name", "site.description", "company.name"]);
+  const banners = await getActiveBanners();
 
   return (
     <>
@@ -34,26 +36,14 @@ export default async function Home() {
       <main className="site-shell">
         <CategorySidebar categories={categories.map((category) => ({ name: category.nameAr, slug: category.slug }))} />
         <section className="content-column">
-          <section className="hero-slider">
-            <div className="hero-copy">
-              <p>{settings["company.name"]}</p>
-              <h1>{settings["site.name"]}</h1>
-              <span>{settings["site.description"]}</span>
-            </div>
-            <div className="hero-products" aria-hidden="true">
-              {products.slice(0, 4).map((product, index) => (
-                <div className={`hero-product hero-product-${index + 1}`} key={product.id}>
-                  <Image src={product.image} alt="" fill sizes="280px" />
-                </div>
-              ))}
-            </div>
-          </section>
-          <button className="slider-cta">إضغط هنا</button>
-          <div className="dots" aria-hidden="true">
-            {Array.from({ length: 18 }).map((_, index) => (
-              <span className={index === 0 ? "active" : ""} key={index} />
-            ))}
-          </div>
+          <HeroSlider
+            banners={banners}
+            fallback={{
+              title: settings["site.name"],
+              subtitle: settings["company.name"],
+              description: settings["site.description"],
+            }}
+          />
           <h2 className="section-title">أحدث 20 منتج</h2>
           <div className="product-grid">
             {products.map((product) => (

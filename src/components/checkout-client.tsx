@@ -1,31 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/empty-state";
 import { useCart } from "@/components/cart-context";
 import { calculateTax, formatPrice } from "@/lib/money";
-
-type SessionUser = {
-  name: string | null;
-  phone?: string | null;
-};
 
 export function CheckoutClient() {
   const router = useRouter();
   const { items, lines, subtotal, clearCart } = useCart();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<SessionUser | null>(null);
   const tax = calculateTax(subtotal);
   const total = subtotal + tax;
-
-  useEffect(() => {
-    fetch("/api/session")
-      .then((response) => response.json())
-      .then((data: { user: SessionUser | null }) => setUser(data.user))
-      .catch(() => setUser(null));
-  }, []);
 
   async function submit(formData: FormData) {
     setError(null);
@@ -61,8 +48,8 @@ export function CheckoutClient() {
     <section className="checkout-layout">
       <form className="checkout-form" action={submit}>
         {error ? <div className="form-error">{error}</div> : null}
-        <label>الاسم<input name="customerName" required defaultValue={user?.name ?? ""} /></label>
-        <label>الهاتف<input name="customerPhone" required defaultValue={user?.phone ?? ""} /></label>
+        <label>الاسم<input name="customerName" required /></label>
+        <label>الهاتف<input name="customerPhone" required /></label>
         <label>العنوان<textarea name="address" required /></label>
         <label>ملاحظات<textarea name="notes" /></label>
         <button type="submit" disabled={loading}>{loading ? "جاري تأكيد الطلب..." : "تأكيد الطلب"}</button>

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import { calculateTax } from "@/lib/money";
+import { sendOrderWhatsApp } from "@/lib/whatsapp-service";
 
 const checkoutSchema = z.object({
   customerName: z.string().trim().min(2, "الاسم مطلوب").max(120, "الاسم طويل جدا"),
@@ -110,9 +111,29 @@ export async function POST(request: Request) {
             }),
           },
         },
-        select: { id: true },
+        select: {
+          id: true,
+          orderNo: true,
+          customerName: true,
+          customerPhone: true,
+          total: true,
+          status: true,
+          items: {
+            select: { name: true, sku: true, price: true, quantity: true, total: true },
+          },
+        },
       });
     });
+
+    sendOrderWhatsApp({
+      id: order.id,
+      orderNo: order.orderNo,
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      total: order.total,
+      status: order.status,
+      items: order.items,
+    }).catch((err) => console.error("[checkout] whatsapp send error:", err));
 
     return NextResponse.json({ orderId: order.id });
   } catch (error) {

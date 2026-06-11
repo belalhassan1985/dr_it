@@ -13,6 +13,7 @@ import { Header } from "@/components/header";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import { formatPrice } from "@/lib/money";
+import { getOrderStatusLabel } from "@/lib/order-status";
 
 export default async function AccountPage() {
   const user = await getCurrentUser();
@@ -55,7 +56,7 @@ export default async function AccountPage() {
               <article className="cart-page-line" key={order.id}>
                 <div>
                   <h2>{order.orderNo}</h2>
-                  <p>{order.status} - {order.createdAt.toLocaleDateString("ar-IQ")}</p>
+                  <p>{getOrderStatusLabel(order.status)} - {order.createdAt.toLocaleDateString("ar-IQ")}</p>
                   <strong>{order.items.length} منتج</strong>
                 </div>
                 <strong>{formatPrice(order.total)}</strong>

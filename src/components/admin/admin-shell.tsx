@@ -7,9 +7,11 @@ const links = [
   { href: "/admin/products", label: "Products" },
   { href: "/admin/categories", label: "Categories" },
   { href: "/admin/brands", label: "Brands" },
+  { href: "/admin/banners", label: "Banners" },
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/customers", label: "Customers" },
   { href: "/admin/settings", label: "Settings" },
+  { href: "/admin/settings#whatsapp", label: "WhatsApp" },
   { href: "/admin/sync", label: "Sync" },
   { href: "/admin/health", label: "Health" },
 ];
