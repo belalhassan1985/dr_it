@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/money";
+import { toApiUrl } from "@/lib/images";
 import type { Prisma } from "@prisma/client";
 
 export type StoreProduct = {
@@ -194,7 +195,7 @@ export { formatPrice };
 type ProductWithRelations = Awaited<ReturnType<typeof prisma.product.findMany<{ include: typeof productInclude }>>>[number];
 
 function toStoreProduct(product: ProductWithRelations): StoreProduct {
-  const gallery = product.images.map((image) => image.url);
+  const gallery = product.images.map((image) => toApiUrl(image.url));
 
   return {
     id: product.id,

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { toApiUrl } from "@/lib/images";
 
 export type StoreBanner = {
   id: string;
@@ -12,7 +13,7 @@ export type StoreBanner = {
 };
 
 export async function getActiveBanners(): Promise<StoreBanner[]> {
-  return prisma.banner.findMany({
+  const banners = await prisma.banner.findMany({
     where: { isActive: true },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     select: {
@@ -26,4 +27,10 @@ export async function getActiveBanners(): Promise<StoreBanner[]> {
       buttonText: true,
     },
   });
+  return banners.map((b) => ({
+    ...b,
+    imageUrl: toApiUrl(b.imageUrl),
+    desktopImageUrl: b.desktopImageUrl ? toApiUrl(b.desktopImageUrl) : null,
+    mobileImageUrl: b.mobileImageUrl ? toApiUrl(b.mobileImageUrl) : null,
+  }));
 }

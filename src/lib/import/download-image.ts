@@ -12,24 +12,32 @@ export async function downloadProductImage(imageUrl: string, productId: string, 
   const extension = extensionFromUrl(imageUrl) ?? "jpg";
   const hash = createHash("sha1").update(imageUrl).digest("hex").slice(0, 10);
   const fileName = `${productId}-${index + 1}-${hash}.${extension}`;
-  const targetDir = path.join(process.cwd(), "public", "products");
+  const targetDir = path.join(process.cwd(), "uploads", "products");
   const targetPath = path.join(targetDir, fileName);
 
   await mkdir(targetDir, { recursive: true });
 
   if (await fileExists(targetPath)) {
     return {
-      publicUrl: `/products/${fileName}`,
+      publicUrl: `/api/uploads/products/${fileName}`,
       filePath: targetPath,
       downloaded: false,
     };
   }
 
-  const response = await fetch(imageUrl, {
-    headers: {
-      "user-agent": "DR.IT Importer/1.0",
-    },
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  let response;
+  try {
+    response = await fetch(imageUrl, {
+      signal: controller.signal,
+      headers: {
+        "user-agent": "DR.IT Importer/1.0",
+      },
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     throw new Error(`Image download failed ${response.status}: ${imageUrl}`);
@@ -40,8 +48,8 @@ export async function downloadProductImage(imageUrl: string, productId: string, 
     ? targetPath.replace(new RegExp(`\\.${extension}$`), `.${contentTypeExtension}`)
     : targetPath;
   const finalPublicUrl = contentTypeExtension && contentTypeExtension !== extension
-    ? `/products/${fileName.replace(new RegExp(`\\.${extension}$`), `.${contentTypeExtension}`)}`
-    : `/products/${fileName}`;
+    ? `/api/uploads/products/${fileName.replace(new RegExp(`\\.${extension}$`), `.${contentTypeExtension}`)}`
+    : `/api/uploads/products/${fileName}`;
 
   await writeFile(finalTargetPath, Buffer.from(await response.arrayBuffer()));
 

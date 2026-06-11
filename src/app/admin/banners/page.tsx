@@ -5,6 +5,7 @@ import { AdminTable } from "@/components/admin/admin-table";
 import { BannerForm } from "@/components/admin/banner-form";
 import { DeleteBannerButton } from "@/components/admin/admin-delete-banner";
 import { prisma } from "@/lib/db";
+import { toApiUrl } from "@/lib/images";
 
 type BannersAdminPageProps = {
   searchParams: Promise<{ edit?: string; success?: string }>;
@@ -19,8 +20,16 @@ function isValidImageUrl(url: string | null): boolean {
 
 function imageFileExists(url: string | null): boolean {
   if (!isValidImageUrl(url)) return false;
-  const filePath = path.join(process.cwd(), "public", url!);
-  return existsSync(filePath);
+  const v = url!;
+  // New format: /api/uploads/banners/xxx → check project-root/uploads/
+  if (v.startsWith("/api/uploads/")) {
+    const relative = v.replace("/api/uploads/", "");
+    const filePath = path.join(process.cwd(), "uploads", relative);
+    if (existsSync(filePath)) return true;
+  }
+  // Old format: /uploads/banners/xxx → check public/uploads/
+  const oldPath = path.join(process.cwd(), "public", v);
+  return existsSync(oldPath);
 }
 
 export default async function BannersAdminPage({ searchParams }: BannersAdminPageProps) {
@@ -61,7 +70,7 @@ export default async function BannersAdminPage({ searchParams }: BannersAdminPag
               <td>
                 {hasImage ? (
                   <div className="banner-table-preview" title={banner.imageUrl!}>
-                    <img src={banner.imageUrl!} alt="" className="banner-table-preview__thumb" />
+                    <img src={toApiUrl(banner.imageUrl!)} alt="" className="banner-table-preview__thumb" />
                     {hasDesktop ? <span className="banner-table-preview__badge" title={banner.desktopImageUrl!}>D</span> : null}
                     {hasMobile ? <span className="banner-table-preview__badge" title={banner.mobileImageUrl!}>M</span> : null}
                     {noFile ? <span className="banner-table-preview__badge banner-table-preview__badge--warn" title="ملف الصورة غير موجود على الخادم">404</span> : null}

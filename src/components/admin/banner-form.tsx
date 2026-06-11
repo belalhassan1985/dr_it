@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveBanner } from "@/lib/admin-actions";
+import { toApiUrl } from "@/lib/images";
 import type { Banner } from "@prisma/client";
 
 type ImageUploadProps = {
@@ -35,7 +36,9 @@ function ImageUpload({ name, label, defaultValue, recommendedSize, required }: I
     if (inputRef.current) inputRef.current.value = "";
   };
 
-  const src = preview || defaultValue || null;
+  // Transform old-format URLs (/uploads/...) to new API route format
+  const displayDefault = defaultValue ? toApiUrl(defaultValue) : null;
+  const src = preview || displayDefault;
 
   return (
     <div className="banner-upload-field">
@@ -107,7 +110,7 @@ function ImageUpload({ name, label, defaultValue, recommendedSize, required }: I
           type="text"
           name={name}
           className="banner-upload-field__url-input"
-          defaultValue={defaultValue ?? ""}
+          defaultValue={displayDefault ?? ""}
           placeholder="https://..."
           dir="ltr"
         />

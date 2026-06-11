@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { StoreBanner } from "@/lib/banners";
+import { toApiUrl } from "@/lib/images";
 
 type HeroSliderProps = {
   banners: StoreBanner[];
@@ -20,7 +21,8 @@ function imgVal(s: string | null | undefined): string {
 }
 
 function bestUrl(b: StoreBanner): string {
-  return imgVal(b.desktopImageUrl) || imgVal(b.imageUrl) || imgVal(b.mobileImageUrl);
+  const url = imgVal(b.desktopImageUrl) || imgVal(b.imageUrl) || imgVal(b.mobileImageUrl);
+  return url ? toApiUrl(url) : "";
 }
 
 export function HeroSlider({ banners, fallback }: HeroSliderProps) {

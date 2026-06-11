@@ -59,8 +59,9 @@ export async function runAnasImport(options?: ImportOptions): Promise<ImportResu
   const limit = options?.limit ?? parseLimit(process.env.ANAS_IMPORT_LIMIT);
   const failedProducts: Array<{ url: string; reason: string }> = [];
 
+  const staleThreshold = new Date(Date.now() - 15 * 60 * 1000);
   const existingRunning = await prisma.syncRun.findFirst({
-    where: { source: "anas", status: "running" },
+    where: { source: "anas", status: "running", startedAt: { gte: staleThreshold } },
   });
   if (existingRunning) {
     return {
@@ -178,8 +179,11 @@ export async function runAnasImport(options?: ImportOptions): Promise<ImportResu
 async function fetchJson<T>(url: string): Promise<T> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
     try {
       const response = await fetch(url, {
+        signal: controller.signal,
         headers: {
           accept: "application/json",
           "user-agent": "DR.IT Importer/1.0",
@@ -192,6 +196,8 @@ async function fetchJson<T>(url: string): Promise<T> {
     } catch (error) {
       lastError = error;
       await new Promise((resolve) => setTimeout(resolve, attempt * 750));
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
   throw lastError instanceof Error ? lastError : new Error(`Fetch failed: ${url}`);

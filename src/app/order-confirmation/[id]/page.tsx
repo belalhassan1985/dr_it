@@ -12,6 +12,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Header } from "@/components/header";
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/money";
+import { toApiUrl } from "@/lib/images";
 import { getOrderStatusLabel } from "@/lib/order-status";
 
 type OrderConfirmationPageProps = {
@@ -54,7 +55,7 @@ export default async function OrderConfirmationPage({ params }: OrderConfirmatio
           <div className="cart-page-lines">
             {order.items.map((item) => (
               <article className="cart-page-line" key={item.id}>
-                <Image src={item.product.images[0]?.url ?? "/images/NoImage.jpg"} alt="" width={96} height={96} />
+                <Image src={toApiUrl(item.product.images[0]?.url ?? "/images/NoImage.jpg")} alt="" width={96} height={96} />
                 <div>
                   <h2>{item.name}</h2>
                   <p>SKU Code : {item.sku}</p>

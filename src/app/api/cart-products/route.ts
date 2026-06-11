@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { toApiUrl } from "@/lib/images";
 
 export async function GET(request: NextRequest) {
   const ids = request.nextUrl.searchParams.get("ids")?.split(",").filter(Boolean) ?? [];
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
       name: product.nameAr || product.nameEn || product.sku,
       price: product.price,
       stock: product.stockQuantity,
-      image: product.images[0]?.url ?? "/images/NoImage.jpg",
+      image: toApiUrl(product.images[0]?.url ?? "/images/NoImage.jpg"),
     })),
   });
 }

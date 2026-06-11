@@ -133,10 +133,11 @@ async function saveUploadedFile(file: File, prefix: string): Promise<string> {
   if (!["jpg", "jpeg", "png", "webp"].includes(ext)) throw new Error("Unsupported file extension");
   if (file.size > 3 * 1024 * 1024) throw new Error("File is too large (max 3MB)");
   const safeName = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const dir = path.join(process.cwd(), "public", "uploads", "banners");
+  // Save to project-root/uploads/ (outside public/, survives redeploy with persistent volume)
+  const dir = path.join(process.cwd(), "uploads", "banners");
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, safeName), Buffer.from(await file.arrayBuffer()));
-  return `/uploads/banners/${safeName}`;
+  return `/api/uploads/banners/${safeName}`;
 }
 
 function resolveImageField(value: FormDataEntryValue | null, prefix: string): Promise<string | null> {
