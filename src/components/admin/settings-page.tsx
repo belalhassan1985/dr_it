@@ -92,6 +92,9 @@ const PREVIEW_ACCOUNTS = `- زين كاش: 07801234567
 function WhatsappSettingsSection({ settings }: { settings: Map<string, string> }) {
   const [template, setTemplate] = useState(settings.get("whatsapp.template") || DEFAULT_TEMPLATE);
   const [enabled, setEnabled] = useState(settings.get("whatsapp.enabled") === "true");
+  const [saveResult, setSaveResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const router = useRouter();
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; error?: string } | null>(null);
   const [testSending, setTestSending] = useState(false);
   const testPhoneRef = useRef<HTMLInputElement>(null);
@@ -258,8 +261,27 @@ function WhatsappSettingsSection({ settings }: { settings: Map<string, string> }
     }
   };
 
+  const handleSaveWhatsapp = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSaving(true);
+    setSaveResult(null);
+    setWahaError("");
+    const formData = new FormData(e.currentTarget);
+    try {
+      const res = await saveWhatsappSettings(formData);
+      setSaveResult(res);
+      if (res.success) {
+        router.refresh();
+      }
+    } catch {
+      setSaveResult({ success: false, message: "حدث خطأ أثناء حفظ الإعدادات" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <form action={saveWhatsappSettings} className="admin-settings-form">
+    <form onSubmit={handleSaveWhatsapp} className="admin-settings-form">
       {/* ── WAHA Connection Section ── */}
       <div className="waha-section">
         <h3>إعدادات WAHA (WhatsApp HTTP API)</h3>
@@ -356,7 +378,7 @@ function WhatsappSettingsSection({ settings }: { settings: Map<string, string> }
         <h3>إعدادات الإشعارات</h3>
 
         <label className="checkbox-label">
-          <input type="checkbox" name="whatsapp.enabled" defaultChecked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
+          <input type="checkbox" name="whatsapp.enabled" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
           تفعيل إرسال رسائل واتساب تلقائياً بعد الطلب
         </label>
 
@@ -383,7 +405,13 @@ function WhatsappSettingsSection({ settings }: { settings: Map<string, string> }
         </label>
       </div>
 
-      <button>حفظ جميع الإعدادات</button>
+      <button type="submit" disabled={saving}>{saving ? "جارٍ الحفظ..." : "حفظ جميع الإعدادات"}</button>
+
+      {saveResult && (
+        <div className={`payment-result ${saveResult.success ? "payment-result--success" : "payment-result--error"}`} style={{ marginTop: 12 }}>
+          {saveResult.message}
+        </div>
+      )}
 
       <div className="preview-box">
         <h3>معاينة الرسالة:</h3>

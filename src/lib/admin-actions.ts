@@ -251,15 +251,20 @@ const WAHA_SETTINGS_KEYS = [
   "waha.api_key",
 ];
 
-export async function saveWhatsappSettings(formData: FormData) {
+export async function saveWhatsappSettings(formData: FormData): Promise<{ success: boolean; message: string }> {
   await assertAdminAccess();
   for (const key of [...WHATSAPP_SETTINGS_KEYS, ...WAHA_SETTINGS_KEYS]) {
-    const value = String(formData.get(key) ?? "");
+    let value = String(formData.get(key) ?? "");
     // Skip empty api_key to preserve existing value
     if (key === "waha.api_key" && !value) continue;
+    // Normalize checkbox: checked="on" → "true", unchecked → "false"
+    if (key === "whatsapp.enabled") {
+      value = formData.get(key) === "on" ? "true" : "false";
+    }
     await prisma.setting.upsert({ where: { key }, update: { value }, create: { key, value } });
   }
   revalidatePath("/admin/settings");
+  return { success: true, message: "تم حفظ إعدادات واتساب بنجاح" };
 }
 
 export async function wahaStartSessionAction() {
