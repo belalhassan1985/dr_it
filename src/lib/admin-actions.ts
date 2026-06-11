@@ -1,6 +1,7 @@
 "use server";
 
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, unlink, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { OrderStatus } from "@prisma/client";
@@ -43,6 +44,7 @@ export async function toggleProduct(formData: FormData) {
   if (!id) return;
   await prisma.product.update({ where: { id }, data: { isActive } });
   revalidatePath("/admin/products");
+  revalidatePath("/");
 }
 
 export async function uploadProductImage(formData: FormData) {
@@ -58,15 +60,43 @@ export async function uploadProductImage(formData: FormData) {
   const productExists = await prisma.product.count({ where: { id: productId } });
   if (!productExists) throw new Error("Product not found");
   const fileName = `${productId}-${Date.now()}.${extension}`;
-  const targetDir = path.join(process.cwd(), "public", "products");
+  const targetDir = path.join(process.cwd(), "uploads", "products");
   await mkdir(targetDir, { recursive: true });
   await writeFile(path.join(targetDir, fileName), Buffer.from(await file.arrayBuffer()));
 
   const count = await prisma.productImage.count({ where: { productId } });
   await prisma.productImage.create({
-    data: { productId, url: `/products/${fileName}`, alt: file.name, sortOrder: count },
+    data: { productId, url: `/api/uploads/products/${fileName}`, alt: file.name, sortOrder: count },
   });
   revalidatePath("/admin/products");
+}
+
+export async function deleteProduct(formData: FormData) {
+  await assertAdminAccess();
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("لم يتم تحديد المنتج.");
+
+  const orderCount = await prisma.orderItem.count({ where: { productId: id } });
+  if (orderCount > 0) {
+    throw new Error("لا يمكن حذف منتج مرتبط بطلبات سابقة، يمكنك تعطيله بدلاً من الحذف.");
+  }
+
+  const images = await prisma.productImage.findMany({ where: { productId: id }, select: { url: true } });
+
+  await prisma.cartItem.deleteMany({ where: { productId: id } });
+  await prisma.product.delete({ where: { id } });
+
+  const uploadsDir = path.join(process.cwd(), "uploads", "products");
+  for (const img of images) {
+    const relative = img.url.replace("/api/uploads/products/", "");
+    const filePath = path.join(uploadsDir, relative);
+    if (existsSync(filePath)) {
+      try { await unlink(filePath); } catch { /* skip */ }
+    }
+  }
+
+  revalidatePath("/admin/products");
+  revalidatePath("/");
 }
 
 export async function saveCategory(formData: FormData) {

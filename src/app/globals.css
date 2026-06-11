@@ -1593,6 +1593,23 @@ img {
   font-weight: 900;
 }
 
+.admin-btn-danger {
+  min-height: 40px;
+  border: 1px solid #dc3545;
+  border-radius: 8px;
+  background: #2a0a0e;
+  color: #dc3545;
+  padding: 0 14px;
+  font-weight: 900;
+  cursor: pointer;
+  margin-top: 6px;
+  width: 100%;
+}
+
+.admin-btn-danger:hover {
+  background: #3d0f15;
+}
+
 .admin-stat-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

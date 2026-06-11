@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { AdminTable } from "@/components/admin/admin-table";
-import { saveProduct, toggleProduct, uploadProductImage } from "@/lib/admin-actions";
+import { saveProduct, toggleProduct, uploadProductImage, deleteProduct } from "@/lib/admin-actions";
 import { PAGE_SIZE } from "@/lib/admin-utils";
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/money";
@@ -41,7 +41,7 @@ export default async function ProductsAdminPage({ searchParams }: ProductsAdminP
     <AdminShell title="Products">
       <form className="admin-toolbar">
         <input name="q" defaultValue={params.q ?? ""} placeholder="بحث بالاسم أو SKU" />
-        <select name="status" defaultValue={params.status ?? ""}><option value="">كل الحالات</option><option value="active">فعال</option><option value="inactive">معطل</option></select>
+        <select name="status" defaultValue={params.status ?? "active"}><option value="active">فعال</option><option value="inactive">معطل</option><option value="">كل الحالات</option></select>
         <select name="sort" defaultValue={params.sort ?? "latest"}><option value="latest">الأحدث</option><option value="price-asc">السعر الأقل</option><option value="stock-asc">المخزون الأقل</option></select>
         <button>تطبيق</button>
       </form>
@@ -76,6 +76,10 @@ export default async function ProductsAdminPage({ searchParams }: ProductsAdminP
                     <input name="id" type="hidden" value={product.id} />
                     <input name="isActive" type="hidden" value={String(!product.isActive)} />
                     <button>{product.isActive ? "تعطيل" : "تفعيل"}</button>
+                  </form>
+                  <form action={deleteProduct} onSubmit={(e) => { if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) e.preventDefault(); }}>
+                    <input name="id" type="hidden" value={product.id} />
+                    <button className="admin-btn-danger">حذف</button>
                   </form>
                 </details>
               </td>
