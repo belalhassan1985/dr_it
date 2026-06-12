@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { AdminTable } from "@/components/admin/admin-table";
-import { saveProduct, toggleProduct, uploadProductImage, deleteProduct } from "@/lib/admin-actions";
+import { saveProduct, toggleProduct, uploadProductImage } from "@/lib/admin-actions";
+import { DeleteProductButton } from "@/components/admin/delete-product-button";
 import { PAGE_SIZE } from "@/lib/admin-utils";
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/money";
@@ -77,10 +78,7 @@ export default async function ProductsAdminPage({ searchParams }: ProductsAdminP
                     <input name="isActive" type="hidden" value={String(!product.isActive)} />
                     <button>{product.isActive ? "تعطيل" : "تفعيل"}</button>
                   </form>
-                  <form action={deleteProduct} onSubmit={(e) => { if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) e.preventDefault(); }}>
-                    <input name="id" type="hidden" value={product.id} />
-                    <button className="admin-btn-danger">حذف</button>
-                  </form>
+                  <DeleteProductButton productId={product.id} />
                 </details>
               </td>
             </tr>
