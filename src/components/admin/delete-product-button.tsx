@@ -12,8 +12,12 @@ export function DeleteProductButton({ productId }: DeleteProductButtonProps) {
 
   async function handleAction(formData: FormData) {
     if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
-    await deleteProduct(formData);
-    router.refresh();
+    const result = await deleteProduct(formData);
+    if (result.success) {
+      router.refresh();
+    } else {
+      alert(result.message);
+    }
   }
 
   return (

@@ -71,32 +71,43 @@ export async function uploadProductImage(formData: FormData) {
   revalidatePath("/admin/products");
 }
 
-export async function deleteProduct(formData: FormData) {
-  await assertAdminAccess();
+export async function deleteProduct(formData: FormData): Promise<{ success: boolean; message: string }> {
+  try {
+    await assertAdminAccess();
+  } catch {
+    return { success: false, message: "صلاحية الوصول منتهية. الرجاء تسجيل الدخول مرة أخرى." };
+  }
+
   const id = String(formData.get("id") ?? "");
-  if (!id) throw new Error("لم يتم تحديد المنتج.");
+  if (!id) return { success: false, message: "لم يتم تحديد المنتج." };
 
-  const orderCount = await prisma.orderItem.count({ where: { productId: id } });
-  if (orderCount > 0) {
-    throw new Error("لا يمكن حذف منتج مرتبط بطلبات سابقة، يمكنك تعطيله بدلاً من الحذف.");
-  }
-
-  const images = await prisma.productImage.findMany({ where: { productId: id }, select: { url: true } });
-
-  await prisma.cartItem.deleteMany({ where: { productId: id } });
-  await prisma.product.delete({ where: { id } });
-
-  const uploadsDir = path.join(process.cwd(), "uploads", "products");
-  for (const img of images) {
-    const relative = img.url.replace("/api/uploads/products/", "");
-    const filePath = path.join(uploadsDir, relative);
-    if (existsSync(filePath)) {
-      try { await unlink(filePath); } catch { /* skip */ }
+  try {
+    const orderCount = await prisma.orderItem.count({ where: { productId: id } });
+    if (orderCount > 0) {
+      return { success: false, message: "لا يمكن حذف منتج مرتبط بطلبات سابقة، يمكنك تعطيله بدلاً من الحذف." };
     }
-  }
 
-  revalidatePath("/admin/products");
-  revalidatePath("/");
+    const images = await prisma.productImage.findMany({ where: { productId: id }, select: { url: true } });
+
+    await prisma.cartItem.deleteMany({ where: { productId: id } });
+    await prisma.product.delete({ where: { id } });
+
+    const uploadsDir = path.join(process.cwd(), "uploads", "products");
+    for (const img of images) {
+      const relative = img.url.replace("/api/uploads/products/", "");
+      const filePath = path.join(uploadsDir, relative);
+      if (existsSync(filePath)) {
+        try { await unlink(filePath); } catch { /* skip */ }
+      }
+    }
+
+    revalidatePath("/admin/products");
+    revalidatePath("/");
+    return { success: true, message: "تم حذف المنتج بنجاح" };
+  } catch (error) {
+    console.error("[deleteProduct] unexpected error:", error);
+    return { success: false, message: "حدث خطأ غير متوقع أثناء حذف المنتج." };
+  }
 }
 
 export async function saveCategory(formData: FormData) {
