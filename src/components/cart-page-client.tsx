@@ -8,8 +8,8 @@ import { useCart } from "@/components/cart-context";
 import { calculateTax, formatPrice } from "@/lib/money";
 
 export function CartPageClient() {
-  const { lines, subtotal, updateQuantity, removeItem, clearCart } = useCart();
-  const tax = calculateTax(subtotal);
+  const { lines, subtotal, taxRate, updateQuantity, removeItem, clearCart } = useCart();
+  const tax = calculateTax(subtotal, taxRate);
   const total = subtotal + tax;
 
   if (lines.length === 0) {

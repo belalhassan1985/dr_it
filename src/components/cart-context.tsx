@@ -27,6 +27,7 @@ type CartContextValue = {
   toast: string | null;
   count: number;
   subtotal: number;
+  taxRate: number;
   addItem: (productId: string, quantity?: number) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
@@ -45,6 +46,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<CartProduct[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
+  const [taxRate, setTaxRate] = useState(0.05);
+
+  useEffect(() => {
+    fetch("/api/settings/tax-rate")
+      .then((res) => res.json())
+      .then((data: { taxRate: number }) => setTaxRate(data.taxRate))
+      .catch(() => { /* use fallback 0.05 */ });
+  }, []);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
@@ -120,6 +129,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       toast,
       count,
       subtotal,
+      taxRate,
       addItem,
       updateQuantity,
       removeItem,
@@ -129,7 +139,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       openCartDrawer,
       closeCartDrawer,
     };
-  }, [addItem, cartDrawerOpen, clearCart, clearToast, closeCartDrawer, items, openCartDrawer, products, removeItem, toast, updateQuantity]);
+  }, [addItem, cartDrawerOpen, clearCart, clearToast, closeCartDrawer, items, openCartDrawer, products, removeItem, taxRate, toast, updateQuantity]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

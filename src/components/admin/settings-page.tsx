@@ -35,7 +35,7 @@ export function SettingsPageClient({ settings, accounts }: Props) {
   const generalKeys = [
     ["site.name", "اسم الموقع"],
     ["site.description", "وصف الموقع"],
-    ["tax.rate", "الضريبة"],
+    ["tax.rate", "الضريبة (نسبة مئوية، مثال: 5 تعني 5%)"],
     ["company.phone", "الهاتف"],
     ["company.whatsapp", "واتساب"],
     ["company.email", "البريد الإلكتروني"],

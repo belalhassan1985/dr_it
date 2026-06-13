@@ -12,8 +12,8 @@ type CartPanelProps = {
 };
 
 export function CartPanel({ open, onClose }: CartPanelProps) {
-  const { lines, subtotal, updateQuantity, removeItem } = useCart();
-  const tax = calculateTax(subtotal);
+  const { lines, subtotal, taxRate, updateQuantity, removeItem } = useCart();
+  const tax = calculateTax(subtotal, taxRate);
   const total = subtotal + tax;
 
   return (

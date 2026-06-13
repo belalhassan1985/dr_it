@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { OrderStatus } from "@prisma/client";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { AdminTable } from "@/components/admin/admin-table";
@@ -30,7 +31,7 @@ export default async function OrdersAdminPage({ searchParams }: OrdersAdminPageP
     <AdminShell title="Orders">
       <form className="admin-toolbar"><input name="q" defaultValue={params.q ?? ""} placeholder="بحث بالطلب أو الزبون" /><button>بحث</button></form>
       <AdminTable>
-        <thead><tr><th>رقم الطلب</th><th>الزبون</th><th>الهاتف</th><th>الحالة</th><th>المجموع</th><th>التفاصيل</th></tr></thead>
+        <thead><tr><th>رقم الطلب</th><th>الزبون</th><th>الهاتف</th><th>الحالة</th><th>المجموع</th><th>التفاصيل</th><th>الفاتورة</th></tr></thead>
         <tbody>{orders.map((order) => (
           <tr key={order.id}>
             <td>{order.orderNo}</td><td>{order.customerName}</td><td>{order.customerPhone}</td><td>{getOrderStatusLabel(order.status)}</td><td>{formatPrice(order.total)}</td>
@@ -45,6 +46,11 @@ export default async function OrdersAdminPage({ searchParams }: OrdersAdminPageP
                 <div className="admin-order-items">{order.items.map((item) => <p key={item.id}>{item.name} × {item.quantity} = {formatPrice(item.total)}</p>)}</div>
                 <p>{order.address}</p>
               </details>
+            </td>
+            <td>
+              <Link href={`/admin/orders/${order.id}/invoice`} target="_blank" className="admin-invoice-link">
+                🖨️ طباعة فاتورة
+              </Link>
             </td>
           </tr>
         ))}</tbody>

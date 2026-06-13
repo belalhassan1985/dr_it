@@ -1169,6 +1169,8 @@ img {
   box-shadow: 22px 0 60px rgba(0, 0, 0, 0.42);
   transform: translateX(-104%);
   transition: transform 300ms ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .cart-layer.open .cart-panel {
@@ -1177,6 +1179,7 @@ img {
 
 .cart-panel-head {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 18px;
@@ -1196,6 +1199,12 @@ img {
   color: #fff;
 }
 
+.cart-lines {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
 .cart-line {
   display: grid;
   grid-template-columns: 62px 1fr 34px;
@@ -1206,6 +1215,7 @@ img {
 }
 
 .cart-empty {
+  flex: 1;
   min-height: 110px;
   display: grid;
   place-items: center;
@@ -1241,6 +1251,7 @@ img {
 }
 
 .cart-panel dl {
+  flex-shrink: 0;
   margin: 18px 0 0;
   display: grid;
   gap: 9px;
@@ -1263,6 +1274,7 @@ img {
 }
 
 .cart-actions {
+  flex-shrink: 0;
   margin-top: 18px;
   display: grid;
   gap: 10px;
@@ -1741,6 +1753,25 @@ img {
   display: grid;
   gap: 4px;
   margin-top: 10px;
+}
+
+.admin-invoice-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+  color: var(--primary);
+  text-decoration: none;
+  transition: background 200ms ease, color 200ms ease;
+}
+.admin-invoice-link:hover {
+  background: var(--primary);
+  color: #000;
 }
 
 .admin-settings-form {

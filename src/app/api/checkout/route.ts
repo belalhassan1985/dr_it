@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
-import { calculateTax } from "@/lib/money";
+import { calculateTax, parseTaxRate } from "@/lib/money";
 import { sendOrderWhatsApp } from "@/lib/whatsapp-service";
 
 const checkoutSchema = z.object({
@@ -39,6 +39,8 @@ export async function POST(request: Request) {
   const data = parsed.data;
   const user = await getCurrentUser();
   const normalizedItems = mergeItems(data.items);
+  const taxSetting = await prisma.setting.findUnique({ where: { key: "tax.rate" } });
+  const taxRate = parseTaxRate(taxSetting?.value);
 
   try {
     const order = await prisma.$transaction(async (tx) => {
@@ -64,7 +66,7 @@ export async function POST(request: Request) {
         const product = products.find((candidate) => candidate.id === item.productId);
         return sum + (product?.price ?? 0) * item.quantity;
       }, 0);
-      const tax = calculateTax(subtotal);
+      const tax = calculateTax(subtotal, taxRate);
       const total = subtotal + tax;
 
       for (const item of normalizedItems) {

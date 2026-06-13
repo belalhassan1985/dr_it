@@ -8,10 +8,10 @@ import { calculateTax, formatPrice } from "@/lib/money";
 
 export function CheckoutClient() {
   const router = useRouter();
-  const { items, lines, subtotal, clearCart } = useCart();
+  const { items, lines, subtotal, taxRate, clearCart } = useCart();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const tax = calculateTax(subtotal);
+  const tax = calculateTax(subtotal, taxRate);
   const total = subtotal + tax;
 
   async function submit(formData: FormData) {
