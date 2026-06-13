@@ -5,6 +5,7 @@ import { formatPrice } from "@/lib/money";
 import { getOrderStatusLabel } from "@/lib/order-status";
 import { requireAdminUser } from "@/lib/auth/session";
 import { PrintInvoiceButton } from "@/components/admin/print-invoice-button";
+import { InvoiceQR } from "@/components/admin/invoice-qr";
 
 export const metadata: Metadata = {
   title: "فاتورة الطلب | DR.IT",
@@ -103,6 +104,8 @@ export default async function InvoicePage({ params }: InvoicePageProps) {
             </tr>
           </tbody>
         </table>
+
+        <InvoiceQR orderId={order.id} />
 
         <div className="invoice-footer">
           <div className="invoice-divider"></div>
@@ -263,6 +266,21 @@ export default async function InvoicePage({ params }: InvoicePageProps) {
           border-top: 1px double #000;
           padding-top: 5px;
           color: #000;
+        }
+
+        .invoice-qr {
+          text-align: center;
+          margin: 10px 0 6px;
+        }
+        .invoice-qr-img {
+          display: inline-block;
+          width: 140px;
+          height: 140px;
+        }
+        .invoice-qr-label {
+          font-size: 9px;
+          color: #777;
+          margin-top: 2px;
         }
 
         .invoice-footer {
